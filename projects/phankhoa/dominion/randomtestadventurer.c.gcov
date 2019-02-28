@@ -1,0 +1,151 @@
+        -:    0:Source:randomtestadventurer.c
+        -:    0:Graph:randomtestadventurer.gcno
+        -:    0:Data:randomtestadventurer.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:#include "dominion.h"
+        -:    2:#include "dominion_helpers.h"
+        -:    3:#include <string.h>
+        -:    4:#include <stdio.h>
+        -:    5:#include <stdlib.h>
+        -:    6:#include <assert.h>
+        -:    7:#include "rngs.h"
+        -:    8:#include <time.h>
+        -:    9:
+        -:   10:#define NUMPLAYERS 2
+        -:   11:#define SEED 2000
+        -:   12:#define NUMTESTS 100000
+        -:   13:#define TRUE 1
+        -:   14:#define FALSE 0
+        -:   15:
+        1:   16:int main () {
+        1:   17:  srand(time(NULL));
+        -:   18:  struct gameState state;
+        -:   19:
+        1:   20:  int currentPlayer = 0;
+        -:   21:
+        -:   22:  // Random card pile
+        1:   23:  int k[10] = {adventurer, smithy, village, minion, mine, 
+        -:   24:    great_hall, feast, embargo, tribute, council_room};
+        -:   25:
+        -:   26:  // Testing Variables
+        -:   27:  int handSize, deckSize, randomCard, cardPile;
+        -:   28:  int coinCount1, coinCount2;
+        -:   29:  int dCopper, dSilver, dGold;
+        1:   30:  int passedTests = 0;
+        1:   31:  int drawFail = 0, discardFail = 0;
+        -:   32:
+   100001:   33:  for(int i = 0; i < NUMTESTS; i++) {
+   100000:   34:    printf("Adventurer Card Test RUN# %d\n", i+1);
+   100000:   35:    initializeGame(NUMPLAYERS, k, SEED, &state);
+   100000:   36:    coinCount1 = rand() % 4;
+   100000:   37:    deckSize = rand() % (MAX_DECK + 1);
+   100000:   38:    handSize = rand() % (deckSize + 1);
+        -:   39:
+        -:   40:    //Retrieve current info from game
+   100000:   41:    state.deckCount[0] = deckSize - handSize;
+   100000:   42:    state.handCount[0] = handSize;
+        -:   43:
+   300000:   44:    for(int j = 0; j < NUMPLAYERS; j++) {
+ 13670896:   45:      for(int p = 0; p < state.deckCount[j]; p++) {
+ 13470896:   46:        randomCard = rand() % 50;
+ 13470896:   47:        cardPile = rand() % 10;
+        -:   48:
+        -:   49:        //
+ 13470896:   50:        if(randomCard == 1)
+   269474:   51:          state.deck[j][p] = copper;
+ 13201422:   52:        else if(randomCard == 2)
+   270357:   53:          state.deck[j][p] = silver;
+ 12931065:   54:        else if(randomCard == 3)
+   270139:   55:          state.deck[j][p] = gold;
+        -:   56:        else
+ 12660926:   57:          state.deck[j][p] = k[cardPile];
+        -:   58:
+        -:   59:      }
+        -:   60:    }
+        -:   61:
+ 12607223:   62:    for(int m = 0; m < state.handCount[currentPlayer]; m++) {
+ 12507223:   63:      if(state.hand[currentPlayer][m] == copper || state.hand[currentPlayer][m] == silver 
+  4958581:   64:        || state.hand[currentPlayer][m] == gold){
+ 11118726:   65:        coinCount1++;
+        -:   66:      }
+        -:   67:    }
+        -:   68:
+   100000:   69:    adventurerCard(&state);
+        -:   70:
+        -:   71:    // Generate random # of coins for testing coverages
+   100000:   72:    coinCount2 = rand() % 2;
+        -:   73:
+        -:   74:    //Count amount of each coin in hand
+ 12768081:   75:    for(int m = 0; m < state.handCount[currentPlayer]; m++) {
+ 12668081:   76:      if(state.hand[currentPlayer][m] == copper || state.hand[currentPlayer][m] == silver 
+  5010630:   77:        || state.hand[currentPlayer][m] == gold){
+ 11282041:   78:        coinCount2++;
+        -:   79:      }
+        -:   80:    }
+        -:   81:
+        -:   82:    // Generate random # of coins for testing coverages
+   100000:   83:    dCopper = rand() % 2;
+   100000:   84:    dSilver = rand() % 2; 
+   100000:   85:    dGold = rand() % 2;
+        -:   86:
+        -:   87:    //Checks discarded cards
+  2659011:   88:    for(int a = 0; a < state.discardCount[currentPlayer]; a++){
+        -:   89:
+  2559011:   90:      if(state.discard[currentPlayer][a] == copper)
+    #####:   91:        dCopper++;
+  2559011:   92:      else if(state.discard[currentPlayer][a] == silver)
+    #####:   93:        dSilver++;
+  2559011:   94:      else if(state.discard[currentPlayer][a] == gold)
+    #####:   95:        dGold++;
+        -:   96:
+        -:   97:    }
+        -:   98:
+   100000:   99:    int passed = TRUE;
+        -:  100:
+        -:  101:    //Tests to count failures in differences in hand and types
+        -:  102:    //of cards
+   100000:  103:    if(coinCount2 > (coinCount1 + 2)) {
+     9628:  104:      printf("Failed. Too many cards drawn.\n");
+     9628:  105:      drawFail++;
+     9628:  106:      passed = FALSE;
+        -:  107:    }
+        -:  108:
+   100000:  109:    if(coinCount2 < coinCount1) {
+    21710:  110:      printf("Failed. Cards were discards.\n");
+    21710:  111:      drawFail++;
+    21710:  112:      passed = FALSE;
+        -:  113:    }
+        -:  114:
+   100000:  115:    if(dCopper != 0) {
+    49943:  116:      printf("Failed. Copper was discarded.\n");
+    49943:  117:      discardFail++;
+    49943:  118:      passed = FALSE;
+        -:  119:    }
+        -:  120:
+   100000:  121:    if(dSilver != 0) {
+    50188:  122:      printf("Failed. Silver was discarded.\n");
+    50188:  123:      discardFail++;
+    50188:  124:      passed = FALSE;
+        -:  125:    }
+        -:  126:
+   100000:  127:    if(dGold != 0) {
+    50072:  128:      printf("Failed. Gold was discarded.\n");
+    50072:  129:      discardFail++;
+    50072:  130:      passed = FALSE;
+        -:  131:    }
+        -:  132:
+   100000:  133:    if(passed == TRUE){
+     8520:  134:      printf("Passed. No Failures.\n");
+     8520:  135:      passedTests++;
+        -:  136:    }
+        -:  137:  } 
+        -:  138:
+        -:  139:  //Display counter of the results of tests
+        1:  140:  printf("# of passed tests: %d\n", passedTests);
+        1:  141:  printf("# of drawn tests failed: %d\n", drawFail);
+        1:  142:  printf("# of discard tests failed: %d\n", discardFail);
+        1:  143:  printf("End of Adventurer Card test.\n");
+        -:  144:
+        1:  145:  return 0;
+        -:  146:}

@@ -1,0 +1,97 @@
+        -:    0:Source:randomtestcard1.c
+        -:    0:Graph:randomtestcard1.gcno
+        -:    0:Data:randomtestcard1.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:#include "dominion.h"
+        -:    2:#include "dominion_helpers.h"
+        -:    3:#include <string.h>
+        -:    4:#include <stdio.h>
+        -:    5:#include <stdlib.h>
+        -:    6:#include <assert.h>
+        -:    7:#include "rngs.h"
+        -:    8:#include <time.h>
+        -:    9:
+        -:   10:#define NUMPLAYERS 2
+        -:   11:#define SEED 1000
+        -:   12:#define NUMTESTS 20000
+        -:   13:#define TRUE 1
+        -:   14:#define FALSE 0
+        -:   15:
+        1:   16:int main () {
+        1:   17:  srand(time(NULL));
+        -:   18:  struct gameState state;
+        -:   19:
+        1:   20:  int currentPlayer = 0;
+        -:   21:
+        -:   22:  // Random card pile
+        1:   23:  int k[10] = {adventurer, smithy, village, minion, mine, 
+        -:   24:    great_hall, feast, embargo, tribute, council_room};
+        -:   25:
+        -:   26:  // Testing Variables
+        -:   27:  int handSize, deckSize, handpos;
+        -:   28:  int hand1, hand2;
+        -:   29:  int deck1, deck2;
+        -:   30:  int discard1, discard2;
+        -:   31:  //int actions1, actions2;
+        1:   32:  int passedTests = 0;
+        1:   33:  int deckFail = 0, handFail = 0, discardFail = 0;
+        -:   34:
+    20001:   35:  for(int i = 0; i < NUMTESTS; i++) {
+    20000:   36:    printf("Smithy Card Test RUN# %d\n", i+1);
+    20000:   37:    initializeGame(NUMPLAYERS, k, SEED, &state);
+    20000:   38:    deckSize = rand() % (MAX_DECK + 1);
+    20000:   39:    handSize = rand() % (deckSize + 1);
+        -:   40:
+        -:   41:    //Retrieve current info from game
+    20000:   42:    state.deckCount[0] = deckSize - handSize;
+    20000:   43:    state.handCount[0] = handSize;
+        -:   44:
+        -:   45:    //
+    20000:   46:    hand1 = state.handCount[0];
+    20000:   47:    deck1 = state.deckCount[0];
+    20000:   48:    discard1 = state.playedCardCount;
+    20000:   49:    handpos = state.hand[currentPlayer][state.handCount[currentPlayer] - 1];
+        -:   50:
+        -:   51:
+    20000:   52:    smithyCard(&state, handpos, currentPlayer);
+        -:   53:
+    20000:   54:    hand2 = state.handCount[0];
+    20000:   55:    deck2 = state.deckCount[0];
+    20000:   56:    discard2 = (state.playedCardCount + (rand() %2));
+        -:   57:
+    20000:   58:    int passed = TRUE;
+        -:   59:
+    20000:   60:    if(hand2 != (hand1 + 2)) {
+    19813:   61:      printf("Failed. Cards in hand are incorrect.\n");
+    19813:   62:      handFail++;
+    19813:   63:      passed = FALSE;
+        -:   64:    }
+        -:   65:
+    20000:   66:    if(discard2 != (discard1 + 1)) {
+     9956:   67:      printf("Failed. Smithy still in hand and was not discarded.\n");
+     9956:   68:      discardFail++;
+     9956:   69:      passed = FALSE;
+        -:   70:    }
+        -:   71:
+    20000:   72:    if(deck2 != (deck1 - 3)) {
+    19813:   73:      printf("Failed. Cards in deck are incorrect.\n");
+    19813:   74:      deckFail++;
+    19813:   75:      passed = FALSE;
+        -:   76:    }
+        -:   77:
+    20000:   78:    if(passed == TRUE){
+       95:   79:      printf("Passed. No Failures.\n");
+       95:   80:      passedTests++;
+        -:   81:    }
+        -:   82:
+        -:   83:}
+        -:   84:  //Display counter of the results of tests
+        1:   85:  printf("# of passed tests: %d\n", passedTests);
+        1:   86:  printf("# of hand tests failed: %d\n", handFail);
+        1:   87:  printf("# of deck tests failed: %d\n", deckFail);
+        1:   88:  printf("# of discard tests failed: %d\n", discardFail);
+        1:   89:  printf("End of Smithy Card test.\n");
+        -:   90:
+        1:   91:  return 0;
+        -:   92:}
